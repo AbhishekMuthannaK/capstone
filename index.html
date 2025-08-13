@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en" class="theme--light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AICTE Secure Meetings</title>
+    <meta name="description" content="Prototype UI for AICTE Secure Meetings - personalized online meeting portal">
+    <style>
+        /* =========================================================
+           AICTE Secure Meetings - Single-file prototype (HTML+CSS)
+           Learning outline:
+           - Reset
+           - Variables (:root) + .theme--dark overrides
+           - Base (typography, focus, links, forms)
+           - Layout (header, sidebar, main, breadcrumbs, footer)
+           - Components (cards, buttons, chips, tables, forms, tabs, alerts)
+           - Utilities (stack, cluster, grid-12, sr-only, skeleton)
+           - Print styles
+           ========================================================= */
+
+        /* ===================== Reset ===================== */
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body, h1, h2, h3, h4, p, figure, blockquote, dl, dd { margin: 0; }
+        ul[role="list"], ol[role="list"] { list-style: none; margin: 0; padding: 0; }
+        img, picture { max-width: 100%; display: block; }
+        input, button, textarea, select { font: inherit; color: inherit; }
+        table { border-collapse: collapse; width: 100%; }
+        a { color: inherit; text-decoration: none; }
+        :focus:not(:focus-visible) { outline: none; }
+
+        /* ===================== Variables ===================== */
+        :root {
+            /* Brand palette */
+            --brand: #0b5cab;
+            --brand-ink: #0a2c4a;
+            --accent: #f5b300;
+            --ok: #1e8e3e;
+            --warn: #bb6a00;
+            --error: #b00020;
+
+            /* Surface / ink */
+            --bg: #f7f9fc;
+            --card: #ffffff;
+            --ink: #1c2a39;
+            --muted: #5b6b7a;
+            --border: #e1e5e9;
+            --hover: #f0f4f8;
+
+            /* Spacing scale */
+            --space-2xs: 0.25rem;
+            --space-xs: 0.375rem;
+            --space-sm: 0.5rem;
+            --space-md: 0.75rem;
+            --space-lg: 1rem;
+            --space-xl: 1.5rem;
+            --space-2xl: 2rem;
+            --space-3xl: 3rem;
+
+            /* Type scale */
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 1rem;
+            --text-lg: 1.125rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+            --text-3xl: 1.875rem;
+
+            /* Radius & shadows */
+            --radius-sm: 0.25rem;
+            --radius-md: 0.375rem;
+            --radius-lg: 0.5rem;
+            --radius-xl: 0.75rem;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 10px rgba(0,0,0,.08);
+            --shadow-lg: 0 10px 20px rgba(0,0,0,.10);
+
+            /* Layout constants */
+            --header-h: 72px;
+            --sidebar-w: 280px;
+            --container-w: 1200px;
+
+            /* Focus ring */
+            --focus: 2px solid #0b5cab;
+        }
+
+        /* Dark Theme (apply by setting class="theme--dark" on <html>) */
+        .theme--dark {
+            --bg: #0f1419;
+            --card: #141a24;
+            --ink: #e7eaf0;
+            --muted: #9aa4b2;
+            --border: #27303a;
+            --hover: #1b2230;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,.45);
+            --shadow-md: 0 4px 10px rgba(0,0,0,.55);
+            --shadow-lg: 0 10px 20px rgba(0,0,0,.6);
+        }
+
+        /* ===================== Base ===================== */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--ink);
+            background: var(--bg);
+        }
+        h1, h2, h3 { line-height: 1.25; font-weight: 700; color: var(--brand-ink); }
+        h1 { font-size: var(--text-2xl); }
+        h2 { font-size: var(--text-xl); }
+        h3 { font-size: var(--text-lg); }
+        p { margin-bottom: var(--space-md); }
+        small, .muted { color: var(--muted); }
+
+        /* Global focus styles */
+        a[href], button, [role="button"], input, select, textarea, summary, label {
+            outline-color: transparent;
+        }
+        a[href]:focus-visible, button:focus-visible, [role="button"]:focus-visible,
+        input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, label:focus-visible {
+            outline: var(--focus);
+            outline-offset: 2px;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Skip link for keyboard users */
+        .skip-link {
+            position: absolute;
+            left: 0;
+            top: -100%;
+            background: var(--brand);
+            color: #fff;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            transition: top .2s ease;
+            z-index: 9999;
+        }
+        .skip-link:focus { top: 0; }
+
+        /* ===================== Layout ===================== */
+        /* Hidden checkbox to toggle sidebar on mobile (no JS) */
+        #navToggle { position: absolute; opacity: 0; pointer-events: none; }
+
+        .app {
+            min-height: 100vh;
+            display: grid;
+            grid-template-rows: var(--header-h) 1fr auto;
+            grid-template-columns: 100%;
+        }
+
+        /* Header (sticky gov bar) */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .header__inner {
+            max-width: var(--container-w);
+            margin: 0 auto;
+            height: var(--header-h);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-lg);
+            gap: var(--space-lg);
+        }
+        .header__brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+        .header__logo {
+            width: 40px; height: 40px;
+            border-radius: var(--radius-md);
+            background: var(--brand); color: #fff;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: var(--text-lg);
+            box-shadow: var(--shadow-sm);
+        }
+        .header__title { display: flex; flex-direction: column; }
+        .header__title-main { font-weight: 800; color: var(--brand-ink); }
+        .header__title-sub { font-size: var(--text-xs); color: var(--muted); }
+
+        /* Header utilities: menu button (mobile), profile area */
+        .header__menu {
+            display: inline-flex; align-items: center; gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--card);
+        }
+        .header__menu span { font-size: var(--text-sm); }
+        @media (min-width: 1024px) { .header__menu { display: none; } }
+
+        .header__utils {
+            display: flex; align-items: center; gap: var(--space-md);
+            margin-left: auto;
+        }
+        .profile {
+            display: inline-flex; align-items: center; gap: var(--space-sm);
+        }
+        .profile__avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--brand); color: #fff; font-weight: 700;
+            display: inline-flex; align-items: center; justify-content: center;
+            position: relative;
+        }
+        .profile__badge {
+            position: absolute; top: -3px; right: -3px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: var(--error); color: #fff; font-size: var(--text-xs);
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .profile__meta { display: none; }
+        @media (min-width: 768px) { .profile__meta { display: inline-flex; flex-direction: column; line-height: 1.2; } }
+        .profile__name { font-size: var(--text-sm); font-weight: 600; }
+        .profile__role { font-size: var(--text-xs); color: var(--muted); }
+
+        /* Sidebar (collapsible on small) */
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-lg);
+            max-width: var(--container-w);
+            width: 100%;
+            margin: 0 auto;
+            padding: var(--space-lg);
+            position: relative;
+        }
+        .sidebar {
+            position: fixed;
+            inset: var(--header-h) auto 0 0;
+            width: var(--sidebar-w);
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            transform: translateX(-100%);
+            transition: transform .25s ease;
+            overflow-y: auto;
+            z-index: 999;
+        }
+        #navToggle:checked ~ .app .sidebar { transform: translateX(0); }
+        @media (min-width: 1024px) { .sidebar { transform: translateX(0); } }
+
+        .sidebar__nav { padding: var(--space-xl); }
+        .nav-group { margin-bottom: var(--space-xl); }
+        .nav-group__title {
+            font-size: var(--text-xs);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: var(--space-sm);
+        }
+        .nav-list { display: grid; gap: var(--space-xs); }
+        .nav-link {
+            display: flex; align-items: center; gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-md);
+            color: var(--ink);
+        }
+        .nav-link:hover, .nav-link:focus-visible { background: var(--hover); color: var(--brand); }
+        .nav-link--active { background: var(--brand); color: #fff; }
+        .nav-link__icon { width: 20px; text-align: center; }
+
+        /* Hide Admin in sidebar unless body has .role--admin (education cue only) */
+        .nav-item--admin { opacity: .55; }
+        body.role--admin .nav-item--admin { opacity: 1; }
+
+        /* Main area accounts for fixed sidebar on desktop */
+        .main { display: grid; gap: var(--space-xl); }
+        @media (min-width: 1024px) {
+            .layout { grid-template-columns: var(--sidebar-w) 1fr; align-items: start; }
+            .main { grid-column: 2; }
+        }
+
+        /* Overlay when sidebar open on mobile */
+        .overlay {
+            position: fixed; inset: var(--header-h) 0 0 0;
+            background: rgba(0,0,0,.25);
+            opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 998;
+        }
+        #navToggle:checked ~ .app .overlay { opacity: 1; pointer-events: auto; }
+        @media (min-width: 1024px) { .overlay { display: none; } }
+
+        /* Breadcrumbs */
+        .breadcrumbs {
+            display: flex; align-items: center; gap: var(--space-sm);
+            font-size: var(--text-sm); color: var(--muted);
+        }
+        .breadcrumbs__link:hover { color: var(--brand); }
+        .breadcrumbs__sep { color: var(--muted); }
+        .breadcrumbs__current { color: var(--ink); font-weight: 600; }
+
+        /* Footer */
+        .footer {
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            padding: var(--space-xl);
+            text-align: center;
+            font-size: var(--text-sm);
+        }
+
+        /* ===================== Components ===================== */
+        /* Cards */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: var(--space-xl);
+        }
+        .card__header { margin-bottom: var(--space-md); }
+        .card__title { font-size: var(--text-lg); font-weight: 700; }
+        .card__meta { color: var(--muted); font-size: var(--text-sm); }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: var(--space-sm); padding: .55rem .9rem;
+            border: 1px solid transparent; border-radius: var(--radius-md);
+            font-weight: 600; font-size: var(--text-sm); cursor: pointer;
+            background: transparent;
+            transition: background .15s ease, border-color .15s ease, color .15s ease;
+        }
+        .btn--primary { background: var(--brand); color: #fff; }
+        .btn--primary:hover { background: var(--brand-ink); }
+        .btn--secondary { background: var(--card); border-color: var(--border); }
+        .btn--secondary:hover { background: var(--hover); }
+        .btn--danger { background: var(--error); color: #fff; }
+        .btn--danger:hover { background: #8f0b1f; }
+        .btn--ghost { background: transparent; border-color: var(--border); }
+        .btn--ghost:hover { background: var(--hover); }
+        .btn--success { background: var(--ok); color: #fff; }
+        .btn--warning { background: var(--warn); color: #fff; }
+        .btn--disabled, .btn[aria-disabled="true"] { opacity: .6; cursor: not-allowed; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+
+        /* Badges / Chips */
+        .badge {
+            display: inline-flex; align-items: center; gap: .35rem;
+            padding: .2rem .55rem; border-radius: 999px;
+            font-size: var(--text-xs); font-weight: 700; letter-spacing: .02em;
+            text-transform: uppercase;
+        }
+        .badge--public { background: #e7f7ea; color: var(--ok); }
+        .badge--restricted { background: #fff3cd; color: var(--warn); }
+        .badge--confidential { background: #fde2e4; color: var(--error); }
+        .badge--role { background: var(--brand); color: #fff; }
+        .badge--muted { background: var(--hover); color: var(--muted); }
+
+        /* Forms */
+        .form-grid { display: grid; gap: var(--space-lg); }
+        .form-group { display: grid; gap: .35rem; }
+        .form-label { font-weight: 700; }
+        .form-hint { font-size: var(--text-xs); color: var(--muted); }
+        .input, .select, .textarea {
+            width: 100%; background: var(--card); color: var(--ink);
+            border: 1px solid var(--border); border-radius: var(--radius-md);
+            padding: .6rem .7rem;
+        }
+        .textarea { min-height: 110px; resize: vertical; }
+        .input::placeholder, .textarea::placeholder { color: var(--muted); }
+        .input[readonly] { background: #f6f8fb; color: var(--muted); }
+
+        /* Input with adornments (e.g., eye icon) */
+        .input-wrap {
+            display: grid; grid-template-columns: 1fr auto;
+            align-items: center; border: 1px solid var(--border);
+            border-radius: var(--radius-md); overflow: hidden; background: var(--card);
+        }
+        .input-wrap input { border: 0; padding: .6rem .7rem; }
+        .input-wrap .adorn { padding: 0 .6rem; color: var(--muted); }
+
+        /* Toggle (CSS switch) */
+        .switch { display: inline-flex; align-items: center; gap: .6rem; }
+        .switch__control {
+            position: relative; width: 44px; height: 24px; border-radius: 999px;
+            background: var(--muted); flex: 0 0 auto;
+        }
+        .switch__control::after {
+            content: ""; position: absolute; top: 3px; left: 3px;
+            width: 18px; height: 18px; border-radius: 50%; background: #fff;
+            transition: transform .2s ease; box-shadow: var(--shadow-sm);
+        }
+        .switch input { position: absolute; inset: 0; opacity: 0; }
+        .switch input:checked + .switch__control { background: var(--brand); }
+        .switch input:checked + .switch__control::after { transform: translateX(20px); }
+
+        /* KPI row */
+        .kpi {
+            display: grid; gap: var(--space-lg);
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+        .kpi-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: var(--space-lg); text-align: center;
+        }
+        .kpi-card__value { font-size: var(--text-3xl); color: var(--brand); font-weight: 800; }
+        .kpi-card__label { color: var(--muted); font-size: var(--text-sm); }
+
+        /* Lists */
+        .list { display: grid; gap: var(--space-md); }
+        .item {
+            display: grid; gap: var(--space-sm);
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: var(--space-lg);
+        }
+        .item__meta { color: var(--muted); font-size: var(--text-sm); }
+        .item__row { display: flex; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+
+        /* Alerts */
+        .alert {
+            display: flex; align-items: center; gap: var(--space-sm);
+            padding: var(--space-md); border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+        .alert--info { background: #e3f2fd; color: #0b5199; border-color: #bbdefb; }
+        .alert--warn { background: #fff6e5; color: var(--warn); border-color: #ffe59a; }
+        .alert--ok { background: #e7f7ea; color: var(--ok); border-color: #c4ebcf; }
+        .alert--error { background: #fde2e4; color: var(--error); border-color: #ffc2c9; }
+
+        /* Tabs (radio-based, CSS-only) */
+        .tabs { border-bottom: 1px solid var(--border); margin-bottom: var(--space-lg); }
+        .tabs__list { display: flex; gap: var(--space-md); flex-wrap: wrap; }
+        .tabs__tab {
+            padding: var(--space-sm) var(--space-md);
+            border-bottom: 2px solid transparent;
+            color: var(--muted); font-weight: 700; font-size: var(--text-sm);
+            cursor: pointer;
+        }
+        .tabs__tab[aria-current="page"] { color: var(--brand); border-bottom-color: var(--brand); }
+
+        /* Tables (responsive: stacked on small) */
+        .table { width: 100%; font-size: var(--text-sm); }
+        .table th, .table td { padding: .6rem .75rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+        .table thead th { background: var(--hover); font-weight: 700; }
+        .table tr:hover td { background: var(--hover); }
+        @media (max-width: 640px) {
+            .table thead { display: none; }
+            .table tr { display: grid; gap: .35rem; padding: var(--space-sm) 0; border-bottom: 1px solid var(--border); }
+            .table td { display: grid; grid-template-columns: 12ch 1fr; gap: .75rem; padding: .25rem 0; }
+            .table td::before { content: attr(data-label); color: var(--muted); font-weight: 600; }
+        }
+
+        /* 12-column utility grid */
+        .grid-12 { display: grid; gap: var(--space-lg); grid-template-columns: repeat(12, 1fr); }
+        .col-12 { grid-column: span 12; }
+        @media (min-width: 900px) {
+            .col-8 { grid-column: span 8; }
+            .col-4 { grid-column: span 4; }
+            .col-6 { grid-column: span 6; }
+            .col-3 { grid-column: span 3; }
+        }
+
+        /* File manager (grid/list view with CSS toggle) */
+        .view-toggle { display: inline-flex; gap: var(--space-sm); align-items: center; }
+        .view-toggle input { position: absolute; opacity: 0; }
+        .view-toggle label { padding: .35rem .6rem; border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; }
+        .view-toggle input:checked + label { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+        .files.is-grid .file-list { display: none; }
+        .files.is-list .file-grid { display: none; }
+
+        .file-grid { display: grid; gap: var(--space-lg); grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+        .file-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: var(--space-lg); display: grid; gap: var(--space-sm); text-align: center;
+        }
+        .file-card__icon { font-size: var(--text-2xl); }
+        .file-card__badge { justify-self: center; }
+        .file-list .file-card { display: grid; grid-template-columns: 1fr auto auto; text-align: left; align-items: center; }
+
+        /* Calendar */
+        .calendar { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+        .calendar__head { background: var(--hover); padding: var(--space-md); text-align: center; font-weight: 700; }
+        .calendar__grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .calendar__cell { border: 1px solid var(--border); min-height: 92px; padding: var(--space-xs); font-size: var(--text-xs); display: grid; gap: 2px; grid-auto-rows: min-content; }
+        .calendar__cell--meta { background: var(--hover); text-align: center; font-weight: 700; min-height: auto; }
+        .calendar__daynum { color: var(--muted); justify-self: end; }
+        .calendar__event { background: var(--brand); color: #fff; border-radius: var(--radius-sm); padding: 2px 6px; font-size: var(--text-xs); }
+
+        /* Meeting room */
+        .meeting { display: grid; gap: var(--space-lg); }
+        .meeting__top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-sm); }
+        .meeting__title { display: inline-flex; align-items: center; gap: .5rem; font-weight: 800; }
+        .meeting__stage {
+            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: var(--space-md); display: grid; gap: var(--space-md);
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); min-height: 260px;
+        }
+        .tile {
+            border: 1px dashed var(--border); border-radius: var(--radius-md);
+            display: grid; align-content: center; justify-items: center; padding: var(--space-md);
+            min-height: 120px; gap: .35rem;
+        }
+        .tile__avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 800; }
+        .tile__name { font-size: var(--text-sm); font-weight: 600; }
+        .meeting__side {
+            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            display: grid; grid-template-rows: auto 1fr; overflow: hidden;
+        }
+        .side-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+        .side-tabs input { position: absolute; opacity: 0; }
+        .side-tabs label { text-align: center; padding: .5rem; border-bottom: 2px solid transparent; cursor: pointer; }
+        #tabParticipants:checked ~ .side-tabs label[for="tabParticipants"],
+        #tabChat:checked ~ .side-tabs label[for="tabChat"] { border-bottom-color: var(--brand); color: var(--brand); font-weight: 700; }
+        .side-panel { padding: var(--space-md); display: none; }
+        #tabParticipants:checked ~ .panel--participants,
+        #tabChat:checked ~ .panel--chat { display: block; }
+
+        .meeting__controls {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-sm);
+            background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: var(--space-sm);
+        }
+
+        /* Dropzone */
+        .dropzone {
+            border: 1.5px dashed var(--border); border-radius: var(--radius-lg);
+            padding: var(--space-xl); text-align: center; color: var(--muted);
+            background: linear-gradient(180deg, transparent, rgba(0,0,0,0.02));
+        }
+        .dropzone:focus-within { border-color: var(--brand); background: rgba(11,92,171,0.04); }
+
+        /* Helper states */
+        .empty {
+            border: 1px dashed var(--border); border-radius: var(--radius-lg);
+            padding: var(--space-xl); text-align: center; color: var(--muted);
+        }
+        .skeleton { position: relative; overflow: hidden; background: linear-gradient(90deg, #e9edf3 25%, #f5f7fa 37%, #e9edf3 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* ===================== Utilities ===================== */
+        .u-sr-only { position: absolute !important; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        .u-cluster { display: inline-flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; }
+        .u-stack-xs > * + * { margin-top: var(--space-xs); }
+        .u-stack-sm > * + * { margin-top: var(--space-sm); }
+        .u-stack-md > * + * { margin-top: var(--space-md); }
+        .u-stack-lg > * + * { margin-top: var(--space-lg); }
+        .u-stack-xl > * + * { margin-top: var(--space-xl); }
+        .u-sep { height: 1px; background: var(--border); margin: var(--space-md) 0; }
+
+        /* ===================== Print ===================== */
+        @media print {
+            .header, .sidebar, .overlay, .meeting__controls, .dropzone, .view-toggle, .btn { display: none !important; }
+            .layout { padding: 0 !important; }
+            .card, .calendar, .meeting__stage, .table { box-shadow: none !important; border-color: #999 !important; }
+            body { background: #fff; color: #000; }
+            a::after { content: " (" attr(href) ")"; font-size: .85em; color: #555; }
+        }
+    </style>
+</head>
+<body class="role--faculty">
+    <!-- Visible skip link helps keyboard users jump to main content -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- CSS-only mobile sidebar toggle -->
+    <input type="checkbox" id="navToggle" aria-hidden="true">
+
+    <div class="app">
+        <!-- ===== Header (sticky) ===== -->
+        <header class="header" role="banner">
+            <div class="header__inner">
+                <div class="header__brand" aria-label="AICTE brand">
+                    <div class="header__logo" aria-hidden="true">AI</div>
+                    <div class="header__title">
+                        <span class="header__title-main">AICTE Secure Meetings</span>
+                        <span class="header__title-sub">Government of India • Ministry of Education</span>
+                    </div>
+                </div>
+                <!-- Mobile menu trigger -->
+                <label for="navToggle" class="header__menu" aria-controls="sidebar" aria-label="Toggle navigation">
+                    <span>☰</span><span class="muted">Menu</span>
+                </label>
+                <!-- Utility area: compact profile with notifications -->
+                <div class="header__utils">
+                    <div class="profile" aria-label="User profile">
+                        <div class="profile__avatar" aria-hidden="true">AK<span class="profile__badge" aria-hidden="true">3</span></div>
+                        <div class="profile__meta">
+                            <span class="profile__name">Arun Kumar</span>
+                            <span class="profile__role">Role: Faculty <span class="badge badge--role" aria-label="Role badge">FAC</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Overlay for mobile nav -->
+        <div class="overlay" aria-hidden="true"></div>
+
+        <!-- ===== Layout: Sidebar + Main ===== -->
+        <div class="layout">
+            <!-- Sidebar (collapsible) -->
+            <aside id="sidebar" class="sidebar" aria-label="Primary">
+                <nav class="sidebar__nav">
+                    <!-- Each group is labeled for screen readers -->
+                    <div class="nav-group">
+                        <div class="nav-group__title">Dashboard</div>
+                        <ul class="nav-list" role="list">
+                            <li><a class="nav-link nav-link--active" href="#dashboard"><span class="nav-link__icon">🏛️</span> Overview</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group__title">Meetings</div>
+                        <ul class="nav-list" role="list">
+                            <li><a class="nav-link" href="#schedule"><span class="nav-link__icon">📅</span> Schedule Meeting</a></li>
+                            <li><a class="nav-link" href="#meeting"><span class="nav-link__icon">🔒</span> Meeting Room</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group__title">Recordings</div>
+                        <ul class="nav-list" role="list">
+                            <li><a class="nav-link" href="#recordings"><span class="nav-link__icon">🎞️</span> Library</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group__title">Files</div>
+                        <ul class="nav-list" role="list">
+                            <li><a class="nav-link" href="#files"><span class="nav-link__icon">🗂️</span> File Manager</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group__title">Calendar</div>
+                        <ul class="nav-list" role="list">
+                            <li><a class="nav-link" href="#calendar"><span class="nav-link__icon">🗓️</span> Month View</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group__title">Settings</div>
+                        <ul class="nav-list" role="list">
+                            <li><a class="nav-link" href="#settings"><span class="nav-link__icon">⚙️</span> Preferences</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-group">
+                        <div class="nav-group__title">Admin</div>
+                        <ul class="nav-list" role="list">
+                            <li class="nav-item--admin">
+                                <!-- Shown grayed-out unless body has .role--admin -->
+                                <a class="nav-link" href="#admin" aria-label="Admin (Admin only)">
+                                    <span class="nav-link__icon">🛡️</span> Admin Console <span class="badge badge--muted">Admin only</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- ===== Main content ===== -->
+            <main id="main-content" class="main" role="main" tabindex="-1">
+                <!-- Breadcrumbs under header -->
+                <nav class="breadcrumbs" aria-label="Breadcrumb">
+                    <a class="breadcrumbs__link" href="#dashboard">Home</a>
+                    <span class="breadcrumbs__sep">›</span>
+                    <span class="breadcrumbs__current">Portal</span>
+                </nav>
+
+                <!-- ================= LOGIN (static mock) ================= -->
+                <section id="login" class="login" aria-labelledby="login-title">
+                    <article class="card" role="article" style="max-width: 520px; margin: 0 auto;">
+                        <header class="card__header u-stack-sm" style="text-align:center;">
+                            <div class="header__logo" aria-hidden="true" style="margin: 0 auto;">AI</div>
+                            <h2 id="login-title" class="card__title">Sign in to AICTE Secure Meetings</h2>
+                            <p class="card__meta">For Institutes, Faculty, HODs, Ministry, and Admins</p>
+                        </header>
+                        <div class="u-stack-lg">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label" for="email">Email</label>
+                                    <input id="email" class="input" type="email" placeholder="name@institute.edu" aria-required="true">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="password">Password</label>
+                                    <div class="input-wrap" role="group" aria-label="Password with visibility mock">
+                                        <input id="password" type="password" class="input" placeholder="••••••••" aria-required="true">
+                                        <span class="adorn" aria-hidden="true" title="Visibility toggle mock">👁</span>
+                                    </div>
+                                    <small class="form-hint">Passwords are never stored in plain text.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="role">Role</label>
+                                    <select id="role" class="select" aria-label="Select your role">
+                                        <option>Institute</option>
+                                        <option selected>Faculty</option>
+                                        <option>HOD</option>
+                                        <option>Ministry</option>
+                                        <option>Admin</option>
+                                    </select>
+                                </div>
+                                <div class="btn-group" role="group" aria-label="Sign in actions">
+                                    <button class="btn btn--primary" type="button">Sign in</button>
+                                    <button class="btn btn--secondary btn--disabled" type="button" aria-disabled="true" title="Disabled example">Sign in (disabled)</button>
+                                    <a class="btn btn--ghost" href="#forgot" role="button">Forgot password?</a>
+                                </div>
+                            </div>
+                            <div class="u-sep"></div>
+                            <aside aria-label="Security highlights" class="u-stack-sm">
+                                <h3 class="card__title" style="font-size: var(--text-base);">Security highlights</h3>
+                                <ul role="list" class="u-stack-xs">
+                                    <li class="muted">🔒 TLS in transit</li>
+                                    <li class="muted">🔐 AES-256 at rest</li>
+                                    <li class="muted">👥 RBAC</li>
+                                    <li class="muted">🗂 Encrypted recordings</li>
+                                </ul>
+                            </aside>
+                        </div>
+                    </article>
+                </section>
+
+                <!-- ================= DASHBOARD ================= -->
+                <section id="dashboard" aria-labelledby="dashboard-title">
+                    <header class="u-stack-xs">
+                        <h2 id="dashboard-title">Dashboard</h2>
+                        <p class="muted">Welcome back. Here's a quick overview of your activity.</p>
+                    </header>
+
+                    <!-- KPI row -->
+                    <div class="kpi" role="region" aria-label="Key metrics">
+                        <div class="kpi-card">
+                            <div class="kpi-card__value">3</div>
+                            <div class="kpi-card__label">Upcoming Meetings</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-card__value">2</div>
+                            <div class="kpi-card__label">Pending Approvals (HOD/Admin)</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-card__value">5</div>
+                            <div class="kpi-card__label">New Files</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-card__value">62%</div>
+                            <div class="kpi-card__label">Storage Used</div>
+                        </div>
+                    </div>
+
+                    <!-- Skeleton example (loading state) -->
+                    <div class="u-stack-sm" aria-live="polite" aria-busy="true" style="margin-top: var(--space-lg);">
+                        <div class="skeleton" style="height: 10px; border-radius: 4px;"></div>
+                        <div class="skeleton" style="height: 10px; width: 80%; border-radius: 4px;"></div>
+                    </div>
+
+                    <div class="grid-12" style="margin-top: var(--space-xl);">
+                        <article class="card col-8" aria-labelledby="today-title">
+                            <header class="card__header">
+                                <h3 id="today-title" class="card__title">Today’s Meetings</h3>
+                            </header>
+                            <div class="list">
+                                <div class="item">
+                                    <div class="item__row">
+                                        <span class="badge badge--public" aria-label="Public">Public</span>
+                                        <strong>10:00–10:30</strong> <span>•</span>
+                                        <span>Faculty Orientation</span>
+                                    </div>
+                                    <div class="item__meta">Host: Dr. Rao</div>
+                                </div>
+                                <div class="item">
+                                    <div class="item__row">
+                                        <span class="badge badge--restricted" aria-label="Restricted">Restricted</span>
+                                        <strong>12:00–13:00</strong> <span>•</span>
+                                        <span>Curriculum Review</span>
+                                    </div>
+                                    <div class="item__meta">Host: HOD - Mechanical</div>
+                                </div>
+                                <div class="item">
+                                    <div class="item__row">
+                                        <span class="badge badge--confidential" aria-label="Confidential">Confidential</span>
+                                        <strong>16:00–17:00</strong> <span>•</span>
+                                        <span>Grant Allocation</span>
+                                    </div>
+                                    <div class="item__meta">Host: Ministry Rep.</div>
+                                </div>
+                            </div>
+                        </article>
+                        <aside class="card col-4" aria-labelledby="quick-actions-title">
+                            <header class="card__header">
+                                <h3 id="quick-actions-title" class="card__title">Quick Actions</h3>
+                            </header>
+                            <div class="btn-group">
+                                <a class="btn btn--primary" href="#schedule" role="button">Schedule Meeting</a>
+                                <button class="btn btn--success" type="button">Start Instant Meeting</button>
+                                <button class="btn btn--secondary" type="button">Upload Agenda</button>
+                            </div>
+                            <div class="u-sep"></div>
+                            <div class="muted" style="font-size: var(--text-sm);">
+                                Sensitivity legend:
+                                <span class="badge badge--public">Public</span>
+                                <span class="badge badge--restricted">Restricted</span>
+                                <span class="badge badge--confidential">Confidential</span>
+                            </div>
+                        </aside>
+                    </div>
+                </section>
+
+                <!-- ================= SCHEDULE MEETING ================= -->
+                <section id="schedule" aria-labelledby="schedule-title">
+                    <h2 id="schedule-title">Schedule Meeting</h2>
+                    <!-- 12-col layout: form (8) + reminders (4) -->
+                    <div class="grid-12" style="margin-top: var(--space-lg);">
+                        <article class="card col-8" aria-label="Schedule form">
+                            <!-- Example error banner -->
+                            <div class="alert alert--error" role="alert" aria-live="polite">
+                                ⚠️ Ensure end time is after start time.
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label" for="mtitle">Title</label>
+                                    <input id="mtitle" class="input" type="text" placeholder="e.g., Department Review">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="mdesc">Description</label>
+                                    <textarea id="mdesc" class="textarea" placeholder="Add a brief agenda or context..."></textarea>
+                                </div>
+                                <div class="grid-12">
+                                    <div class="form-group col-6">
+                                        <label class="form-label" for="mdate">Date</label>
+                                        <input id="mdate" class="input" type="date">
+                                    </div>
+                                    <div class="form-group col-3">
+                                        <label class="form-label" for="mstart">Start</label>
+                                        <input id="mstart" class="input" type="time" value="10:00">
+                                    </div>
+                                    <div class="form-group col-3">
+                                        <label class="form-label" for="mend">End</label>
+                                        <input id="mend" class="input" type="time" value="11:00">
+                                    </div>
+                                </div>
+                                <div class="grid-12">
+                                    <div class="form-group col-6">
+                                        <label class="form-label" for="tz">Time zone</label>
+                                        <select id="tz" class="select">
+                                            <option selected>IST (UTC+05:30)</option>
+                                            <option>UTC (GMT+0)</option>
+                                            <option>EST (UTC-05:00)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-6">
+                                        <label class="form-label" for="sensitivity">Sensitivity</label>
+                                        <select id="sensitivity" class="select" aria-label="Select sensitivity level">
+                                            <option class="badge--public">Public</option>
+                                            <option selected class="badge--restricted">Restricted</option>
+                                            <option class="badge--confidential">Confidential</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="invitees">Invitees</label>
+                                    <input id="invitees" class="input" type="text" placeholder="Type emails; demo chips below">
+                                    <div class="u-cluster" aria-hidden="true" style="margin-top: var(--space-sm);">
+                                        <span class="badge badge--role" title="Invitee">AR</span>
+                                        <span class="badge badge--role" title="Invitee">DR</span>
+                                        <span class="badge badge--role" title="Invitee">SJ</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <span class="form-label">Options</span>
+                                    <div class="u-cluster">
+                                        <label class="switch">
+                                            <input type="checkbox" aria-label="Waiting room">
+                                            <span class="switch__control"></span>
+                                            <span>Waiting room</span>
+                                        </label>
+                                        <label class="switch">
+                                            <input type="checkbox" checked aria-label="Record meeting">
+                                            <span class="switch__control"></span>
+                                            <span>Record</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="attach">Attachments</label>
+                                    <div id="attach" class="dropzone" tabindex="0" role="button" aria-label="Drop files here or browse">
+                                        📎 Drag & drop files here or <u>browse</u>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="joinlink">Generate secure join link</label>
+                                    <div class="input-wrap">
+                                        <input id="joinlink" class="input" type="text" readonly value="https://meet.aicte.gov.in/join/SECURE-********-TOKEN" aria-readonly="true">
+                                        <span class="adorn" aria-hidden="true">🔒</span>
+                                    </div>
+                                    <small class="form-hint">Token masked for display. Links are signed and time-bound.</small>
+                                </div>
+
+                                <div class="btn-group">
+                                    <button class="btn btn--primary" type="button">Create Meeting</button>
+                                    <button class="btn btn--ghost" type="button">Save Draft</button>
+                                </div>
+                            </div>
+                        </article>
+
+                        <aside class="card col-4" aria-labelledby="policy-title">
+                            <h3 id="policy-title" class="card__title">Policy reminders</h3>
+                            <ul role="list" class="u-stack-sm" style="margin-top: var(--space-md);">
+                                <li>🔒 Confidential meetings auto-record to encrypted vault.</li>
+                                <li>🛡 Guests join as observers unless approved.</li>
+                                <li>⏱ Recordings retain for 180 days (default).</li>
+                            </ul>
+                            <div class="u-sep"></div>
+                            <p class="muted">Need help? Refer to institutional IT policy.</p>
+                        </aside>
+                    </div>
+                </section>
+
+                <!-- ================= MEETING ROOM (mock) ================= -->
+                <section id="meeting" aria-labelledby="meeting-title">
+                    <div class="meeting">
+                        <div class="meeting__top">
+                            <div class="u-cluster">
+                                <h2 id="meeting-title" class="meeting__title">🔒 Project Phoenix Standup</h2>
+                                <span class="badge badge--restricted" aria-label="Sensitivity">Restricted</span>
+                            </div>
+                            <div class="u-cluster">
+                                <span class="muted">⏱ 00:18:42</span>
+                            </div>
+                        </div>
+
+                        <!-- Alert banners -->
+                        <div class="u-cluster" role="region" aria-label="Live notices">
+                            <div class="alert alert--ok">⏺ Recording On</div>
+                            <div class="alert alert--info">🖥️ Screen Share Active</div>
+                            <div class="alert alert--warn">🕒 Waiting Room: 2 participants</div>
+                        </div>
+
+                        <div class="grid-12">
+                            <section class="meeting__stage col-8" aria-label="Video stage">
+                                <div class="tile"><div class="tile__avatar">AK</div><div class="tile__name">Arun Kumar</div></div>
+                                <div class="tile"><div class="tile__avatar">DR</div><div class="tile__name">Dr. Rao</div></div>
+                                <div class="tile"><div class="tile__avatar">SJ</div><div class="tile__name">S. Jain</div></div>
+                                <div class="tile"><div class="tile__avatar">NP</div><div class="tile__name">N. Patel</div></div>
+                            </section>
+
+                            <aside class="meeting__side col-4" aria-label="Participants and chat">
+                                <!-- Radio inputs drive tabs with pure CSS -->
+                                <input type="radio" name="sideTab" id="tabParticipants" checked>
+                                <input type="radio" name="sideTab" id="tabChat">
+                                <div class="side-tabs" role="tablist" aria-label="Side panels">
+                                    <label class="tabs__tab" for="tabParticipants" role="tab" aria-selected="true">Participants</label>
+                                    <label class="tabs__tab" for="tabChat" role="tab" aria-selected="false">Chat</label>
+                                </div>
+                                <div class="side-panel panel--participants" role="tabpanel" aria-labelledby="tabParticipants">
+                                    <ul role="list" class="u-stack-sm">
+                                        <li class="u-cluster"><span class="badge badge--role">AK</span> Arun Kumar (You)</li>
+                                        <li class="u-cluster"><span class="badge badge--role">DR</span> Dr. Rao</li>
+                                        <li class="u-cluster"><span class="badge badge--role">SJ</span> S. Jain</li>
+                                        <li class="u-cluster"><span class="badge badge--role">NP</span> N. Patel</li>
+                                    </ul>
+                                </div>
+                                <div class="side-panel panel--chat" role="tabpanel" aria-labelledby="tabChat">
+                                    <div class="empty">No messages yet. Say hello to everyone.</div>
+                                </div>
+                            </aside>
+                        </div>
+
+                        <!-- Bottom controls (no functionality, visual only) -->
+                        <div class="meeting__controls" role="toolbar" aria-label="Meeting controls">
+                            <button class="btn btn--secondary" type="button">🎤 Mute</button>
+                            <button class="btn btn--secondary" type="button">🎥 Stop Video</button>
+                            <button class="btn btn--secondary" type="button">🖥️ Share Screen</button>
+                            <button class="btn btn--secondary" type="button">⏺ Record</button>
+                            <button class="btn btn--secondary" type="button">✋ Raise Hand</button>
+                            <button class="btn btn--secondary" type="button">CC Captions</button>
+                            <button class="btn btn--danger" type="button" aria-label="Leave meeting">Leave</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================= RECORDINGS ================= -->
+                <section id="recordings" aria-labelledby="recordings-title">
+                    <h2 id="recordings-title">Recordings</h2>
+                    <div class="u-stack-sm" style="margin-top: var(--space-md);">
+                        <div class="u-cluster">
+                            <input class="input" type="search" placeholder="Search recordings…" aria-label="Search recordings">
+                            <div class="u-cluster">
+                                <span class="badge badge--muted" role="button" tabindex="0">Date</span>
+                                <span class="badge badge--muted" role="button" tabindex="0">Owner</span>
+                                <span class="badge badge--muted" role="button" tabindex="0">Sensitivity</span>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table" role="table" aria-label="Recordings table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Title</th>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Owner</th>
+                                        <th scope="col">Duration</th>
+                                        <th scope="col">Sensitivity</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td data-label="Title">Dept Review</td>
+                                        <td data-label="Date">2025-03-21</td>
+                                        <td data-label="Owner">Arun Kumar</td>
+                                        <td data-label="Duration">42m</td>
+                                        <td data-label="Sensitivity"><span class="badge badge--restricted">Restricted</span></td>
+                                        <td data-label="Actions" class="u-cluster">
+                                            <a href="#view" class="btn btn--ghost" role="button">View</a>
+                                            <button class="btn btn--ghost" type="button" title="You are the owner">Download</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td data-label="Title">Grant Allocation</td>
+                                        <td data-label="Date">2025-03-18</td>
+                                        <td data-label="Owner">HOD</td>
+                                        <td data-label="Duration">58m</td>
+                                        <td data-label="Sensitivity"><span class="badge badge--confidential">Confidential</span></td>
+                                        <td data-label="Actions" class="u-cluster">
+                                            <a href="#view" class="btn btn--ghost" role="button">View</a>
+                                            <button class="btn btn--ghost btn--disabled" type="button" aria-disabled="true" title="Download disabled for non-owners">Download</button>
+                                            <button class="btn btn--secondary" type="button" title="Request access from owner">Request Access</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td data-label="Title">Public Seminar</td>
+                                        <td data-label="Date">2025-03-10</td>
+                                        <td data-label="Owner">Media</td>
+                                        <td data-label="Duration">1h 12m</td>
+                                        <td data-label="Sensitivity"><span class="badge badge--public">Public</span></td>
+                                        <td data-label="Actions" class="u-cluster">
+                                            <a href="#view" class="btn btn--ghost" role="button">View</a>
+                                            <button class="btn btn--ghost btn--disabled" type="button" aria-disabled="true" title="Download disabled by policy">Download</button>
+                                            <button class="btn btn--secondary" type="button">Request Access</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================= FILES ================= -->
+                <section id="files" aria-labelledby="files-title">
+                    <h2 id="files-title">Files</h2>
+                    <!-- View toggle mock (CSS only) -->
+                    <div class="u-cluster" style="margin-top: var(--space-sm);">
+                        <span class="muted">View:</span>
+                        <div class="view-toggle" aria-label="Toggle view">
+                            <input type="radio" id="viewGrid" name="fileView" checked>
+                            <label for="viewGrid">Grid</label>
+                            <input type="radio" id="viewList" name="fileView">
+                            <label for="viewList">List</label>
+                        </div>
+                    </div>
+
+                    <!-- Container switches class via :checked (CSS demo using adjacent selectors) -->
+                    <div class="files is-grid" style="margin-top: var(--space-md);">
+                        <!-- Grid view -->
+                        <div class="file-grid">
+                            <article class="file-card" aria-label="Agenda.docx">
+                                <div class="file-card__icon">📄</div>
+                                <div class="file-card__name">Agenda.docx</div>
+                                <div class="file-card__meta muted">DOCX • 120 KB</div>
+                                <span class="badge badge--restricted file-card__badge">Restricted</span>
+                            </article>
+                            <article class="file-card" aria-label="Budget.xlsx">
+                                <div class="file-card__icon">📊</div>
+                                <div class="file-card__name">Budget.xlsx</div>
+                                <div class="file-card__meta muted">XLSX • 220 KB</div>
+                                <span class="badge badge--confidential file-card__badge">Confidential</span>
+                            </article>
+                            <article class="file-card" aria-label="Poster.png">
+                                <div class="file-card__icon">🖼️</div>
+                                <div class="file-card__name">Poster.png</div>
+                                <div class="file-card__meta muted">PNG • 540 KB</div>
+                                <span class="badge badge--public file-card__badge">Public</span>
+                            </article>
+                        </div>
+
+                        <!-- List view (visually hidden until toggled) -->
+                        <div class="file-list" style="margin-top: var(--space-md);">
+                            <article class="file-card">
+                                <div><strong>Agenda.docx</strong> <span class="muted">DOCX • 120 KB</span></div>
+                                <span class="badge badge--restricted">Restricted</span>
+                                <button class="btn btn--ghost" type="button">Open</button>
+                            </article>
+                            <article class="file-card">
+                                <div><strong>Budget.xlsx</strong> <span class="muted">XLSX • 220 KB</span></div>
+                                <span class="badge badge--confidential">Confidential</span>
+                                <button class="btn btn--ghost" type="button">Open</button>
+                            </article>
+                            <article class="file-card">
+                                <div><strong>Poster.png</strong> <span class="muted">PNG • 540 KB</span></div>
+                                <span class="badge badge--public">Public</span>
+                                <button class="btn btn--ghost" type="button">Open</button>
+                            </article>
+                        </div>
+                    </div>
+
+                    <!-- Simple CSS to flip files container class based on radio: for demo only -->
+                    <style>
+                        /* Inline helper to simulate toggle without JS (scoped) */
+                        #viewGrid:checked ~ label[for="viewGrid"] ~ #viewList ~ label[for="viewList"] ~ .files { display: block; }
+                        /* When List is selected, emulate .is-list by hiding grid and showing list */
+                        #viewList:checked ~ label[for="viewList"] ~ .files .file-grid { display: none; }
+                        #viewList:checked ~ label[for="viewList"] ~ .files .file-list { display: block; }
+                    </style>
+                </section>
+
+                <!-- ================= CALENDAR ================= -->
+                <section id="calendar" aria-labelledby="calendar-title">
+                    <h2 id="calendar-title">Calendar</h2>
+                    <div class="calendar" style="margin-top: var(--space-md);">
+                        <div class="calendar__head">March 2025</div>
+                        <div class="calendar__grid" role="grid" aria-readonly="true">
+                            <div class="calendar__cell calendar__cell--meta" role="columnheader">Mon</div>
+                            <div class="calendar__cell calendar__cell--meta" role="columnheader">Tue</div>
+                            <div class="calendar__cell calendar__cell--meta" role="columnheader">Wed</div>
+                            <div class="calendar__cell calendar__cell--meta" role="columnheader">Thu</div>
+                            <div class="calendar__cell calendar__cell--meta" role="columnheader">Fri</div>
+                            <div class="calendar__cell calendar__cell--meta" role="columnheader">Sat</div>
+                            <div class="calendar__cell calendar__cell--meta" role="columnheader">Sun</div>
+
+                            <!-- Week rows (static mock) -->
+                            <div class="calendar__cell"><span class="calendar__daynum">1</span><div class="calendar__event">Seminar <span class="badge badge--public">P</span></div></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">2</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">3</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">4</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">5</span><div class="calendar__event">Review <span class="badge badge--restricted">R</span></div></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">6</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">7</span></div>
+
+                            <div class="calendar__cell"><span class="calendar__daynum">8</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">9</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">10</span><div class="calendar__event">Public Talk <span class="badge badge--public">P</span></div></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">11</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">12</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">13</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">14</span></div>
+
+                            <div class="calendar__cell"><span class="calendar__daynum">15</span><div class="calendar__event">Grant <span class="badge badge--confidential">C</span></div></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">16</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">17</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">18</span><div class="calendar__event">HOD Sync <span class="badge badge--restricted">R</span></div></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">19</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">20</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">21</span></div>
+
+                            <div class="calendar__cell"><span class="calendar__daynum">22</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">23</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">24</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">25</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">26</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">27</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">28</span></div>
+
+                            <div class="calendar__cell"><span class="calendar__daynum">29</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">30</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum">31</span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum"> </span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum"> </span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum"> </span></div>
+                            <div class="calendar__cell"><span class="calendar__daynum"> </span></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================= SETTINGS ================= -->
+                <section id="settings" aria-labelledby="settings-title">
+                    <h2 id="settings-title">Settings</h2>
+
+                    <!-- Tabs (radio-based) -->
+                    <div class="tabs" style="margin-top: var(--space-md);">
+                        <div class="tabs__list" role="tablist" aria-label="Settings tabs">
+                            <a href="#settings-profile" class="tabs__tab" aria-current="page">Profile</a>
+                            <a href="#settings-security" class="tabs__tab">Security</a>
+                            <a href="#settings-notifications" class="tabs__tab">Notifications</a>
+                        </div>
+                    </div>
+
+                    <div class="grid-12">
+                        <!-- Profile -->
+                        <article id="settings-profile" class="card col-12" aria-labelledby="profile-tab">
+                            <h3 id="profile-tab" class="card__title">Profile</h3>
+                            <div class="form-grid" style="margin-top: var(--space-md);">
+                                <div class="form-group">
+                                    <label class="form-label" for="pname">Full name</label>
+                                    <input id="pname" class="input" type="text" value="Arun Kumar">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="pdept">Department</label>
+                                    <input id="pdept" class="input" type="text" value="Mechanical Engineering">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="pphone">Phone</label>
+                                    <input id="pphone" class="input" type="tel" placeholder="+91-XXXXXXXXXX">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="pavatar">Avatar initials</label>
+                                    <input id="pavatar" class="input" type="text" value="AK" maxlength="3">
+                                </div>
+                            </div>
+                        </article>
+
+                        <!-- Security -->
+                        <article id="settings-security" class="card col-12" aria-labelledby="security-tab" style="scroll-margin-top: var(--space-xl);">
+                            <h3 id="security-tab" class="card__title">Security</h3>
+                            <div class="u-stack-md" style="margin-top: var(--space-md);">
+                                <div class="u-cluster">
+                                    <span>2FA Status:</span>
+                                    <span class="badge badge--restricted" aria-label="Two-factor authentication status">Disabled</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table" aria-label="Active sessions">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Device</th>
+                                                <th scope="col">Location</th>
+                                                <th scope="col">Last Active</th>
+                                                <th scope="col">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td data-label="Device">Windows • Edge</td>
+                                                <td data-label="Location">Bengaluru, IN</td>
+                                                <td data-label="Last Active">Just now</td>
+                                                <td data-label="Status"><span class="badge badge--public">Current</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td data-label="Device">Android • App</td>
+                                                <td data-label="Location">Chennai, IN</td>
+                                                <td data-label="Last Active">2d ago</td>
+                                                <td data-label="Status"><span class="badge badge--muted">Idle</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button class="btn btn--secondary btn--disabled" type="button" aria-disabled="true" title="Only Admin can download audit logs">Download Audit Log</button>
+                            </div>
+                        </article>
+
+                        <!-- Notifications -->
+                        <article id="settings-notifications" class="card col-12" aria-labelledby="notify-tab" style="scroll-margin-top: var(--space-xl);">
+                            <h3 id="notify-tab" class="card__title">Notifications</h3>
+                            <div class="u-stack-md" style="margin-top: var(--space-md);">
+                                <label class="switch">
+                                    <input type="checkbox" checked aria-label="Email notifications">
+                                    <span class="switch__control"></span>
+                                    <span>Email notifications</span>
+                                </label>
+                                <label class="switch">
+                                    <input type="checkbox" aria-label="Weekly digest">
+                                    <span class="switch__control"></span>
+                                    <span>Weekly digest</span>
+                                </label>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- ================= ADMIN ================= -->
+                <section id="admin" aria-labelledby="admin-title">
+                    <header class="u-cluster">
+                        <h2 id="admin-title">Admin</h2>
+                        <span class="badge badge--muted" title="Section visible for Admins; shown here for demo">Admin only</span>
+                    </header>
+
+                    <div class="grid-12" style="margin-top: var(--space-md);">
+                        <article class="card col-12" aria-labelledby="user-role-title">
+                            <h3 id="user-role-title" class="card__title">User & Role Management</h3>
+                            <div class="table-responsive" style="margin-top: var(--space-md);">
+                                <table class="table" aria-label="User and role table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Name</th>
+                                            <th scope="col">Role</th>
+                                            <th scope="col">Last Active</th>
+                                            <th scope="col">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td data-label="Name">Arun Kumar</td>
+                                            <td data-label="Role">Faculty</td>
+                                            <td data-label="Last Active">Now</td>
+                                            <td data-label="Status"><span class="badge badge--public">Active</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td data-label="Name">HOD - Mech</td>
+                                            <td data-label="Role">HOD</td>
+                                            <td data-label="Last Active">1h ago</td>
+                                            <td data-label="Status"><span class="badge badge--muted">Pending</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td data-label="Name">Admin User</td>
+                                            <td data-label="Role">Admin</td>
+                                            <td data-label="Last Active">Today</td>
+                                            <td data-label="Status"><span class="badge badge--public">Active</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </article>
+
+                        <aside class="card col-6" aria-labelledby="policies-title">
+                            <h3 id="policies-title" class="card__title">Policies</h3>
+                            <ul role="list" class="u-stack-sm" style="margin-top: var(--space-md);">
+                                <li class="item">
+                                    <strong>Recording Retention</strong>
+                                    <div class="item__meta">180 days (default)</div>
+                                </li>
+                                <li class="item">
+                                    <strong>Guest Access</strong>
+                                    <div class="item__meta">Restricted to invited-only</div>
+                                </li>
+                                <li class="item">
+                                    <strong>File Classification</strong>
+                                    <div class="item__meta">Public / Restricted / Confidential</div>
+                                </li>
+                            </ul>
+                        </aside>
+
+                        <aside class="card col-6" aria-labelledby="health-title">
+                            <h3 id="health-title" class="card__title">System Health</h3>
+                            <div class="u-cluster" style="margin-top: var(--space-md);">
+                                <span class="badge badge--public">API</span>
+                                <span class="badge badge--public">DB</span>
+                                <span class="badge badge--public">Media Server</span>
+                            </div>
+                        </aside>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- ===== Footer ===== -->
+        <footer class="footer" role="contentinfo">
+            <p>© <span aria-label="year">2025</span> AICTE. All rights reserved.</p>
+            <p class="muted">Privacy & Security: Data encrypted in transit and at rest. Usage subject to institutional policy.</p>
+        </footer>
+    </div>
+</body>
+</html>
