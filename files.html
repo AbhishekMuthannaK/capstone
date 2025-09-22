@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" class="theme--light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Files • AICTE Secure Meetings</title>
+    <style>
+        :root{--bg:#0f1419;--card:#141a24;--ink:#e7eaf0;--muted:#9aa4b2;--border:#27303a}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:
+            radial-gradient(1200px 600px at -10% -20%, rgba(123,177,255,0.06), transparent 60%),
+            radial-gradient(1000px 500px at 120% -10%, rgba(11,92,171,0.06), transparent 60%),
+            linear-gradient(135deg, #0f1419 0%, #111822 50%, #0f1419 100%);color:var(--ink)}
+        .container{max-width:1200px;margin:0 auto;padding:1rem}
+        .nav{margin-bottom:1rem;display:flex;gap:.75rem}
+        .nav a{padding:.4rem .65rem;border-radius:.375rem;text-decoration:none;color:#9aa4b2;background:#141a24;border:1px solid #27303a}
+        .nav a.active{background:#0b5cab;color:#fff;border-color:#0b5cab}
+        .grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+        .card{background:var(--card);border:1px solid var(--border);border-radius:.5rem;padding:1rem;text-align:center;color:var(--ink)}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="schedule.html">Schedule</a>
+            <a href="meeting.html">Meeting</a>
+            <a href="recordings.html">Recordings</a>
+            <a class="active" href="files.html">Files</a>
+            <a href="calendar.html">Calendar</a>
+            <a href="settings.html">Settings</a>
+            <a href="admin.html">Admin</a>
+        </nav>
+        <h2>Files</h2>
+        <div class="grid" style="margin-top:1rem;">
+            <article class="card"><div style="font-size:1.5rem">📄</div><div>Agenda.docx</div><div class="muted">DOCX • 120 KB</div></article>
+            <article class="card"><div style="font-size:1.5rem">📊</div><div>Budget.xlsx</div><div class="muted">XLSX • 220 KB</div></article>
+            <article class="card"><div style="font-size:1.5rem">🖼️</div><div>Poster.png</div><div class="muted">PNG • 540 KB</div></article>
+        </div>
+    </div>
+</body>
+</html>
+
+
