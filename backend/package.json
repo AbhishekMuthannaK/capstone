@@ -1,0 +1,29 @@
+{
+  "name": "aicte-meeting-portal-backend",
+  "version": "1.0.0",
+  "description": "Secure AICTE Online Meeting Portal backend (Express + PostgreSQL + Socket.IO)",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --env-file=.env --watch src/index.js",
+    "prepare": "node -e \"try{require('fs').mkdirSync('uploads',{recursive:true})}catch(e){}\""
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.13",
+    "pg": "^8.11.5",
+    "pg-hstore": "^2.3.4",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1"
+  }
+}
+
+
